@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>STARBASE // Mission Control</title>
+  <meta name="description" content="Live launch countdown board. Launch data from Launch Library 2 by The Space Devs." />
+  <meta name="color-scheme" content="dark" />
+  <meta name="theme-color" content="#05070a" />
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="hero" id="hero" data-status="loading">
+    <div class="hero-bg" id="hero-bg" aria-hidden="true"></div>
+    <div class="scanlines" aria-hidden="true"></div>
+
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span class="brand-text">STARBASE <span class="dim">//</span> MISSION CONTROL</span>
+      </div>
+      <div class="topbar-right">
+        <span class="chip chip-stale" id="stale-chip" hidden>DATA STALE</span>
+        <span class="chip chip-mock" id="mock-chip" hidden>MOCK</span>
+        <span class="utc" id="utc-clock" aria-live="off">--:--:-- UTC</span>
+      </div>
+    </header>
+
+    <section class="stage">
+      <div class="clock-label" id="clock-label">NEXT LAUNCH</div>
+      <div class="clock" id="clock" aria-live="polite">--:--:--</div>
+      <div class="clock-sub" id="clock-sub"></div>
+
+      <div class="status-row">
+        <span class="pill" id="status-pill">LOADING</span>
+        <span class="net" id="net-text"></span>
+      </div>
+
+      <h1 class="title" id="title">Acquiring launch manifest…</h1>
+
+      <dl class="facts" id="facts">
+        <div><dt>PROVIDER</dt><dd id="f-provider">—</dd></div>
+        <div><dt>VEHICLE</dt><dd id="f-vehicle">—</dd></div>
+        <div><dt>PAD</dt><dd id="f-pad">—</dd></div>
+        <div><dt>ORBIT</dt><dd id="f-orbit">—</dd></div>
+        <div><dt>MISSION</dt><dd id="f-mission">—</dd></div>
+        <div><dt>WINDOW</dt><dd id="f-window">—</dd></div>
+      </dl>
+
+      <div class="actions">
+        <a class="watch" id="watch" href="#" target="_blank" rel="noopener noreferrer" hidden>
+          <span class="live-dot" aria-hidden="true"></span><span id="watch-text">WATCH LIVE</span>
+        </a>
+        <button class="ghost" id="auto-btn" type="button" hidden>◂ BACK TO NEXT</button>
+      </div>
+    </section>
+
+    <section class="strip-wrap">
+      <div class="strip-head">
+        <span>UPCOMING</span>
+        <span class="dim" id="strip-count"></span>
+      </div>
+      <div class="strip" id="strip" role="list"></div>
+    </section>
+
+    <footer class="foot">
+      <span>
+        Launch data:
+        <a href="https://thespacedevs.com/llapi" target="_blank" rel="noopener noreferrer">Launch Library 2</a>
+        by <a href="https://thespacedevs.com" target="_blank" rel="noopener noreferrer">The Space Devs</a>
+      </span>
+      <span class="dim" id="updated">updated —</span>
+      <a href="https://github.com/zevlo/starbase" target="_blank" rel="noopener noreferrer">github.com/zevlo/starbase</a>
+    </footer>
+  </main>
+
+  <template id="card-tpl">
+    <button class="card" role="listitem" type="button">
+      <div class="card-img"></div>
+      <div class="card-body">
+        <div class="card-top">
+          <span class="pill pill-sm"></span>
+          <span class="card-when"></span>
+        </div>
+        <div class="card-name"></div>
+        <div class="card-meta"></div>
+      </div>
+    </button>
+  </template>
+
+  <script src="app.js" defer></script>
+</body>
+</html>

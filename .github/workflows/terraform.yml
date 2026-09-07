@@ -1,0 +1,124 @@
+name: terraform
+
+# plan on pull requests (read-only role), apply on main (scoped apply role).
+# Authentication is GitHub OIDC -> AWS STS; there are no stored AWS keys.
+
+on:
+  pull_request:
+    paths: ["infra/**", "lambdas/ingest/**", "lambdas/read/**", ".github/workflows/terraform.yml"]
+  push:
+    branches: [main]
+    paths: ["infra/**", "lambdas/ingest/**", "lambdas/read/**", ".github/workflows/terraform.yml"]
+  workflow_dispatch:
+
+concurrency:
+  group: starbase-terraform
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: us-east-1
+  TF_IN_AUTOMATION: "1"
+  TF_INPUT: "0"
+
+jobs:
+  plan:
+    if: github.event_name == 'pull_request'
+    name: plan
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+    defaults:
+      run:
+        working-directory: infra
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_PLAN_ROLE_ARN }}
+          role-session-name: starbase-plan-${{ github.run_id }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.16.0"
+          terraform_wrapper: false
+
+      - run: terraform init
+      - run: terraform validate -no-color
+
+      - name: terraform plan
+        id: plan
+        run: |
+          set +e
+          terraform plan -no-color -lock=false -out=tfplan 2>&1 | tee plan.txt
+          code=${PIPESTATUS[0]}
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit $code
+
+      - name: comment plan on PR
+        if: always()
+        uses: actions/github-script@v7
+        env:
+          PLAN_EXIT: ${{ steps.plan.outputs.exit_code }}
+        with:
+          script: |
+            const fs = require('fs');
+            let plan = fs.readFileSync('infra/plan.txt', 'utf8');
+            const max = 60000;
+            if (plan.length > max) plan = plan.slice(0, max) + '\n\n... (truncated)';
+            const status = process.env.PLAN_EXIT === '0' ? 'succeeded' : 'FAILED';
+            const body = `### terraform plan ${status}\n<details><summary>show plan</summary>\n\n\`\`\`\n${plan}\n\`\`\`\n</details>\n\n_run: ${context.runId}_`;
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner, repo: context.repo.repo, issue_number: context.issue.number,
+            });
+            const prev = comments.find(c => c.user.type === 'Bot' && c.body.startsWith('### terraform plan'));
+            if (prev) {
+              await github.rest.issues.updateComment({ owner: context.repo.owner, repo: context.repo.repo, comment_id: prev.id, body });
+            } else {
+              await github.rest.issues.createComment({ owner: context.repo.owner, repo: context.repo.repo, issue_number: context.issue.number, body });
+            }
+
+  apply:
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    name: apply
+    runs-on: ubuntu-latest
+    environment: prod
+    permissions:
+      id-token: write
+      contents: read
+    defaults:
+      run:
+        working-directory: infra
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_APPLY_ROLE_ARN }}
+          role-session-name: starbase-apply-${{ github.run_id }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.16.0"
+          terraform_wrapper: false
+
+      - run: terraform init
+      - run: terraform validate -no-color
+      - run: terraform plan -no-color -out=tfplan
+      - run: terraform apply -no-color -auto-approve tfplan
+
+      - name: summary
+        run: |
+          {
+            echo "### starbase apply"
+            echo
+            echo '| output | value |'
+            echo '|---|---|'
+            for k in site_url cloudfront_url api_url table_name ingest_function_name; do
+              echo "| $k | $(terraform output -raw $k) |"
+            done
+          } >> "$GITHUB_STEP_SUMMARY"

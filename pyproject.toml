@@ -1,0 +1,15 @@
+[tool.pytest.ini_options]
+testpaths = ["lambdas/tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+src = ["lambdas/ingest", "lambdas/read"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+ignore = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["ingest_handler", "ll2", "mapping", "store", "read_handler", "queries"]

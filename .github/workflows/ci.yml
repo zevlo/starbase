@@ -1,0 +1,54 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    name: lint + test (lambdas)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -q pytest "moto[dynamodb]" boto3 ruff
+      - run: ruff check lambdas scripts
+      - run: ruff format --check lambdas scripts
+      - run: pytest
+
+  terraform:
+    name: fmt + validate (infra)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.16.0"
+      - run: terraform fmt -check -recursive
+        working-directory: infra
+      - run: terraform init -backend=false -input=false
+        working-directory: infra
+      - run: terraform validate -no-color
+        working-directory: infra
+      - run: terraform init -backend=false -input=false
+        working-directory: infra/bootstrap
+      - run: terraform validate -no-color
+        working-directory: infra/bootstrap
+
+  web:
+    name: syntax (web)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: node --check web/app.js
+      - run: for f in web/mock/*.json; do node -e "JSON.parse(require('fs').readFileSync('$f','utf8'))" && echo "ok $f"; done

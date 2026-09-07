@@ -1,0 +1,381 @@
+{
+ "generated_at": "2026-09-07T05:16:48Z",
+ "source": {
+  "name": "Launch Library 2",
+  "by": "The Space Devs",
+  "url": "https://thespacedevs.com/llapi"
+ },
+ "ingest": {
+  "last_ok_at": "2026-09-07T05:13:38Z",
+  "last_run_at": "2026-09-07T05:13:38Z",
+  "last_error": null,
+  "stale_seconds": 190,
+  "stale": false,
+  "source_host": "ll.thespacedevs.com"
+ },
+ "hero": {
+  "id": "95eb9265-bdbe-43ad-b08c-6be7eb4e58f4",
+  "name": "Long March 2D/YZ-3 | Unknown Payload",
+  "slug": "long-march-2dyz-3-unknown-payload",
+  "net": "2026-09-09T09:00:00Z",
+  "net_precision": "SEC",
+  "window_start": "2026-09-09T08:52:00Z",
+  "window_end": "2026-09-09T09:13:00Z",
+  "status": {
+   "abbrev": "Hold",
+   "name": "On Hold"
+  },
+  "prev_status": "Go",
+  "provider": "China Aerospace Science and Technology Corporation",
+  "vehicle": "Long March 2D/YZ-3",
+  "pad": {
+   "name": "Launch Area 94 (SLS-2 / 603)",
+   "location": "Jiuquan Satellite Launch Center, People's Republic of China",
+   "lat": "40.960482",
+   "lon": "100.298059"
+  },
+  "mission": {
+   "name": "Unknown Payload",
+   "type": "Unknown",
+   "description": "Details TBD.",
+   "orbit": {
+    "abbrev": "N/A",
+    "name": "Unknown"
+   }
+  },
+  "image_url": "https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/images/long_march_2d2_image_20231123203521.jpeg",
+  "webcast_live": false,
+  "webcast_url": null,
+  "holdreason": "Range violation; awaiting clearance from the RSO.",
+  "failreason": null,
+  "lane": "UPCOMING",
+  "last_seen_at": "2026-09-07T05:13:38Z",
+  "last_changed_at": "2026-09-07T05:13:38Z",
+  "ll_last_updated": "2026-09-02T13:12:45Z"
+ },
+ "strip": [
+  {
+   "id": "d793ba47-faf5-4bab-a386-39a9ccc49c90",
+   "name": "Soyuz 2.1b | Progress MS-35 (96P)",
+   "slug": "soyuz-21b-progress-ms-35-96p",
+   "net": "2026-09-09T16:15:03Z",
+   "net_precision": "SEC",
+   "window_start": "2026-09-09T16:15:03Z",
+   "window_end": "2026-09-09T16:15:03Z",
+   "status": {
+    "abbrev": "Go",
+    "name": "Go for Launch"
+   },
+   "prev_status": "Go",
+   "provider": "Russian Federal Space Agency (ROSCOSMOS)",
+   "vehicle": "Soyuz 2.1b",
+   "pad": {
+    "name": "31/6",
+    "location": "Baikonur Cosmodrome, Republic of Kazakhstan",
+    "lat": "45.996034",
+    "lon": "63.564003"
+   },
+   "mission": {
+    "name": "Progress MS-35 (96P)",
+    "type": "Resupply",
+    "description": "Progress resupply mission to the International Space Station.",
+    "orbit": {
+     "abbrev": "LEO",
+     "name": "Low Earth Orbit"
+    }
+   },
+   "image_url": "https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/images/soyuz_2.1b_image_20230802085331.jpg",
+   "webcast_live": false,
+   "webcast_url": "https://plus.nasa.gov/scheduled-video/progress-96-cargo-ship-launch/",
+   "holdreason": null,
+   "failreason": null,
+   "lane": "UPCOMING",
+   "last_seen_at": "2026-09-07T05:13:38Z",
+   "last_changed_at": "2026-09-07T05:13:38Z",
+   "ll_last_updated": "2026-09-05T23:39:12Z"
+  },
+  {
+   "id": "3e0456da-14b1-4ac3-b59e-35fefb1d1530",
+   "name": "Falcon 9 Block 5 | USSF-153",
+   "slug": "falcon-9-block-5-ussf-153",
+   "net": "2026-09-10T15:37:00Z",
+   "net_precision": "MIN",
+   "window_start": "2026-09-10T15:37:00Z",
+   "window_end": "2026-09-10T18:37:00Z",
+   "status": {
+    "abbrev": "Go",
+    "name": "Go for Launch"
+   },
+   "prev_status": "Go",
+   "provider": "SpaceX",
+   "vehicle": "Falcon 9 Block 5",
+   "pad": {
+    "name": "Space Launch Complex 4E",
+    "location": "Vandenberg SFB, CA, USA",
+    "lat": "34.632",
+    "lon": "-120.611"
+   },
+   "mission": {
+    "name": "USSF-153",
+    "type": "Government/Top Secret",
+    "description": "USSF-153 is a classified mission for the United States Space Force. It is possibly a batch of classified LEO satellites for a US government entity based on SpaceX\u2019s Starshield satellite bus, based on locations of rocket stage drop zones being exact fits with previous Starlink Group 15 launches.",
+    "orbit": {
+     "abbrev": "LEO",
+     "name": "Low Earth Orbit"
+    }
+   },
+   "image_url": "https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/images/falcon_9_liftof_image_20260816171423.jpg",
+   "webcast_live": false,
+   "webcast_url": "https://x.com/i/broadcasts/1nxnRBWejLOxO",
+   "holdreason": null,
+   "failreason": null,
+   "lane": "UPCOMING",
+   "last_seen_at": "2026-09-07T05:13:38Z",
+   "last_changed_at": "2026-09-07T05:13:38Z",
+   "ll_last_updated": "2026-09-04T07:04:42Z"
+  },
+  {
+   "id": "63063b9d-ade9-4448-8717-6f910aa81188",
+   "name": "Long March 8A | Unknown Payload",
+   "slug": "long-march-8a-unknown-payload",
+   "net": "2026-09-11T16:00:00Z",
+   "net_precision": "HR",
+   "window_start": "2026-09-11T16:00:00Z",
+   "window_end": "2026-09-11T20:00:00Z",
+   "status": {
+    "abbrev": "TBC",
+    "name": "To Be Confirmed"
+   },
+   "prev_status": "TBC",
+   "provider": "China Aerospace Science and Technology Corporation",
+   "vehicle": "Long March 8A",
+   "pad": {
+    "name": "Commercial LC-1",
+    "location": "Wenchang Space Launch Site, People's Republic of China",
+    "lat": "19.597275",
+    "lon": "110.930753"
+   },
+   "mission": {
+    "name": "Unknown Payload",
+    "type": "Unknown",
+    "description": "Details TBD.",
+    "orbit": {
+     "abbrev": "N/A",
+     "name": "Unknown"
+    }
+   },
+   "image_url": "https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/images/cz-8a_launch_2_image_20251206093107.jpeg",
+   "webcast_live": false,
+   "webcast_url": null,
+   "holdreason": null,
+   "failreason": null,
+   "lane": "UPCOMING",
+   "last_seen_at": "2026-09-07T05:13:38Z",
+   "last_changed_at": "2026-09-07T05:13:38Z",
+   "ll_last_updated": "2026-08-30T12:30:39Z"
+  },
+  {
+   "id": "ad358a4d-c541-409b-9366-9c2f2da4aeb9",
+   "name": "Falcon 9 Block 5 | O3b mPower 11-13",
+   "slug": "falcon-9-block-5-o3b-mpower-11-13",
+   "net": "2026-09-13T18:50:00Z",
+   "net_precision": "MIN",
+   "window_start": "2026-09-13T18:50:00Z",
+   "window_end": "2026-09-13T20:27:00Z",
+   "status": {
+    "abbrev": "TBC",
+    "name": "To Be Confirmed"
+   },
+   "prev_status": "TBC",
+   "provider": "SpaceX",
+   "vehicle": "Falcon 9 Block 5",
+   "pad": {
+    "name": "Space Launch Complex 40",
+    "location": "Cape Canaveral SFS, FL, USA",
+    "lat": "28.56194122",
+    "lon": "-80.57735736"
+   },
+   "mission": {
+    "name": "O3b mPower 11-13",
+    "type": "Communications",
+    "description": "3 high-throughput communications satellites in Medium Earth Orbit (MEO) built by Boeing and operated by SES.",
+    "orbit": {
+     "abbrev": "MEO",
+     "name": "Medium Earth Orbit"
+    }
+   },
+   "image_url": "https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/images/falcon_9_image_20230807133459.jpeg",
+   "webcast_live": false,
+   "webcast_url": null,
+   "holdreason": null,
+   "failreason": null,
+   "lane": "UPCOMING",
+   "last_seen_at": "2026-09-07T05:13:38Z",
+   "last_changed_at": "2026-09-07T05:13:38Z",
+   "ll_last_updated": "2026-09-04T19:21:47Z"
+  },
+  {
+   "id": "8effc13a-c658-4d2e-9f15-8dba4d7fe2dd",
+   "name": "Vega-C | Sentinel-3C & FLEX",
+   "slug": "vega-c-sentinel-3c-flex",
+   "net": "2026-09-15T01:21:07Z",
+   "net_precision": "SEC",
+   "window_start": "2026-09-15T01:21:07Z",
+   "window_end": "2026-09-15T01:21:07Z",
+   "status": {
+    "abbrev": "Go",
+    "name": "Go for Launch"
+   },
+   "prev_status": "Go",
+   "provider": "Avio S.p.A",
+   "vehicle": "Vega-C",
+   "pad": {
+    "name": "Ariane Launch Area 1 (ELV)",
+    "location": "Guiana Space Centre, French Guiana",
+    "lat": "5.236",
+    "lon": "-52.775"
+   },
+   "mission": {
+    "name": "Sentinel-3C & FLEX",
+    "type": "Earth Science",
+    "description": "Sentinel-3C is the third satellite in the Sentinel-3 constellation, which provides high-accuracy optical, radar and altimetry data for marine and land services.\r\n\r\nThe Fluorescence Explorer (FLEX) satellite is a part of ESA's Earth Explorer program. The satellite will map vegetation fluorescence to quantify photosynthetic activity.",
+    "orbit": {
+     "abbrev": "SSO",
+     "name": "Sun-Synchronous Orbit"
+    }
+   },
+   "image_url": "https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/images/vega-c_image_20220713154437.jpg",
+   "webcast_live": false,
+   "webcast_url": null,
+   "holdreason": null,
+   "failreason": null,
+   "lane": "UPCOMING",
+   "last_seen_at": "2026-09-07T05:13:38Z",
+   "last_changed_at": "2026-09-07T05:13:38Z",
+   "ll_last_updated": "2026-07-30T14:09:43Z"
+  },
+  {
+   "id": "18441371-8b2e-457c-afb5-1ec1b11ab630",
+   "name": "Falcon 9 Block 5 | Crew-13",
+   "slug": "falcon-9-block-5-crew-13",
+   "net": "2026-09-30T00:00:00Z",
+   "net_precision": "M",
+   "window_start": "2026-09-30T00:00:00Z",
+   "window_end": "2026-09-30T00:00:00Z",
+   "status": {
+    "abbrev": "TBD",
+    "name": "To Be Determined"
+   },
+   "prev_status": "TBD",
+   "provider": "SpaceX",
+   "vehicle": "Falcon 9 Block 5",
+   "pad": {
+    "name": "Space Launch Complex 40",
+    "location": "Cape Canaveral SFS, FL, USA",
+    "lat": "28.56194122",
+    "lon": "-80.57735736"
+   },
+   "mission": {
+    "name": "Crew-13",
+    "type": "Human Exploration",
+    "description": "SpaceX Crew-13 is the thirteenth crewed operational flight of a Crew Dragon spacecraft to the International Space Station as part of NASA's Commercial Crew Program.",
+    "orbit": {
+     "abbrev": "LEO",
+     "name": "Low Earth Orbit"
+    }
+   },
+   "image_url": "https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/images/falcon2520925_image_20220301072106.jpeg",
+   "webcast_live": false,
+   "webcast_url": null,
+   "holdreason": null,
+   "failreason": null,
+   "lane": "UPCOMING",
+   "last_seen_at": "2026-09-07T05:13:38Z",
+   "last_changed_at": "2026-09-07T05:13:38Z",
+   "ll_last_updated": "2026-08-30T01:29:52Z"
+  },
+  {
+   "id": "3b94ad50-3505-496e-8a95-b0bc4c0dadc6",
+   "name": "Themis Demonstrator | T1H-1",
+   "slug": "themis-demonstrator-t1h-1",
+   "net": "2026-09-30T00:00:00Z",
+   "net_precision": "Q3",
+   "window_start": "2026-09-30T00:00:00Z",
+   "window_end": "2026-09-30T00:00:00Z",
+   "status": {
+    "abbrev": "TBD",
+    "name": "To Be Determined"
+   },
+   "prev_status": "TBD",
+   "provider": "European Space Agency",
+   "vehicle": "Themis Demonstrator",
+   "pad": {
+    "name": "Launch Complex 3B",
+    "location": "Esrange Space Center",
+    "lat": "67.877368",
+    "lon": "21.165001"
+   },
+   "mission": {
+    "name": "T1H-1",
+    "type": "Test Flight",
+    "description": "First low-altitude hop test of a Themis demonstrator, with a targeted altitude up to 100 m.",
+    "orbit": {
+     "abbrev": "Sub",
+     "name": "Suborbital"
+    }
+   },
+   "image_url": "https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/images/themis_t1h_on_t_image_20250919095336.jpg",
+   "webcast_live": false,
+   "webcast_url": null,
+   "holdreason": null,
+   "failreason": null,
+   "lane": "UPCOMING",
+   "last_seen_at": "2026-09-07T05:13:38Z",
+   "last_changed_at": "2026-09-07T05:13:38Z",
+   "ll_last_updated": "2026-06-25T12:03:26Z"
+  },
+  {
+   "id": "548df42c-ae26-4cc9-921a-f0042941911a",
+   "name": "Electron | BlackSky Gen-3 6",
+   "slug": "electron-blacksky-gen-3-6",
+   "net": "2026-09-30T00:00:00Z",
+   "net_precision": "Q3",
+   "window_start": "2026-09-30T00:00:00Z",
+   "window_end": "2026-09-30T00:00:00Z",
+   "status": {
+    "abbrev": "TBD",
+    "name": "To Be Determined"
+   },
+   "prev_status": "TBD",
+   "provider": "Rocket Lab",
+   "vehicle": "Electron",
+   "pad": {
+    "name": "Unknown Pad",
+    "location": "Rocket Lab Launch Complex 1, Mahia Peninsula, New Zealand",
+    "lat": "-39.260881",
+    "lon": "177.865826"
+   },
+   "mission": {
+    "name": "BlackSky Gen-3 6",
+    "type": "Earth Science",
+    "description": "BlackSky Gen-3 Earth-imaging satellites",
+    "orbit": {
+     "abbrev": "LEO",
+     "name": "Low Earth Orbit"
+    }
+   },
+   "image_url": "https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/images/electron_image_20190705175640.jpeg",
+   "webcast_live": false,
+   "webcast_url": null,
+   "holdreason": null,
+   "failreason": null,
+   "lane": "UPCOMING",
+   "last_seen_at": "2026-09-07T05:13:38Z",
+   "last_changed_at": "2026-09-07T05:13:38Z",
+   "ll_last_updated": "2026-08-06T15:07:55Z"
+  }
+ ],
+ "mock": {
+  "variant": "Hold"
+ }
+}

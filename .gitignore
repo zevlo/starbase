@@ -1,0 +1,24 @@
+# Terraform
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+tfplan
+.terraform.lock.hcl.bak
+infra/bootstrap/terraform.tfstate*
+crash.log
+
+# Build artifacts
+*.zip
+infra/build/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+
+# Local env
+.env
+.DS_Store
