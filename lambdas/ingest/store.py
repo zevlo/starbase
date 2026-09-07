@@ -14,6 +14,32 @@ from mapping import LANE_PAST, iso_z
 # Attributes that the upsert must never overwrite with the incoming value.
 _PROTECTED = {"pk", "sk", "first_seen_at", "prev_status_abbrev", "last_changed_at"}
 
+# Optional attributes. mapping.to_item drops None values, so when upstream clears one
+# of these (hold lifted, webcast pulled, image removed) it must be REMOVEd here or the
+# stale value would live on forever.
+_NULLABLE = {
+    "slug",
+    "net_precision",
+    "window_start",
+    "window_end",
+    "status_raw_abbrev",
+    "provider_name",
+    "vehicle_name",
+    "pad_name",
+    "pad_location",
+    "pad_lat",
+    "pad_lon",
+    "mission_name",
+    "mission_type",
+    "mission_description",
+    "orbit_abbrev",
+    "orbit_name",
+    "image_url",
+    "webcast_url",
+    "holdreason",
+    "failreason",
+}
+
 EXISTING_PROJECTION = "id, ll_last_updated, status_abbrev, lane, net, #n"
 
 
@@ -91,10 +117,18 @@ class Store:
         sets.append("prev_status_abbrev = :prev")
         sets.append("last_changed_at = :now")
 
+        removes: list[str] = []
+        for j, key in enumerate(sorted(_NULLABLE - item.keys())):
+            names[f"#r{j}"] = key
+            removes.append(f"#r{j}")
+        expression = "SET " + ", ".join(sets)
+        if removes:
+            expression += " REMOVE " + ", ".join(removes)
+
         try:
             self.table.update_item(
                 Key={"pk": item["pk"], "sk": item["sk"]},
-                UpdateExpression="SET " + ", ".join(sets),
+                UpdateExpression=expression,
                 # Never let a slow/out-of-order invocation regress to older upstream data.
                 ConditionExpression="attribute_not_exists(ll_last_updated) OR ll_last_updated <= :llu",
                 ExpressionAttributeNames=names,

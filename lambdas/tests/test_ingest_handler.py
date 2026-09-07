@@ -119,6 +119,31 @@ def test_status_change_is_detected_and_prev_status_kept(handler):
     assert item["lane"] == "UPCOMING"
 
 
+def test_cleared_upstream_fields_are_removed(handler):
+    """Hold lifted and webcast pulled upstream -> holdreason / webcast_url must disappear."""
+    hero_id = handler["results"][0]["id"]
+    held = json.loads(json.dumps(handler["results"]))
+    held[0]["holdreason"] = "Weather"
+    held[0]["vidURLs"] = [{"priority": 10, "url": "https://youtube.com/live"}]
+    mod = handler["load"](_write_fixture(handler["tmp"], held, hero_status="Hold"))
+    mod.lambda_handler({"job": "upcoming"}, None)
+    item = handler["table"].get_item(Key={"pk": f"LAUNCH#{hero_id}", "sk": "META"})["Item"]
+    assert item["holdreason"] == "Weather" and item["webcast_url"] == "https://youtube.com/live"
+
+    cleared = json.loads(json.dumps(handler["results"]))
+    cleared[0]["holdreason"] = ""
+    cleared[0]["vidURLs"] = []
+    cleared[0]["last_updated"] = "2099-01-01T00:00:00Z"  # newer than the Hold write
+    mod = handler["load"](_write_fixture(handler["tmp"], cleared))
+    result = mod.lambda_handler({"job": "upcoming"}, None)
+    assert result["written"] >= 1
+    item = handler["table"].get_item(Key={"pk": f"LAUNCH#{hero_id}", "sk": "META"})["Item"]
+    assert item["status_abbrev"] == "Go"
+    assert "holdreason" not in item
+    assert "webcast_url" not in item
+    assert item["prev_status_abbrev"] == "Hold"
+
+
 def test_stale_upstream_never_regresses_state(handler):
     """A later invocation carrying an older last_updated must not overwrite newer data."""
     fresh = _write_fixture(handler["tmp"], handler["results"], hero_status="Hold")
