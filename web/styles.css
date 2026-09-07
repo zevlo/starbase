@@ -102,11 +102,12 @@ button { font: inherit; color: inherit; }
   display: flex; flex-direction: column; justify-content: center;
   padding: clamp(24px, 5vh, 64px) 28px 24px;
   max-width: 1200px; width: 100%; margin: 0 auto;
+  container-type: inline-size;
 }
 .clock-label { font-family: var(--mono); font-size: 12px; letter-spacing: 0.3em; color: var(--dim); }
 .clock {
   font-family: var(--mono); font-weight: 800;
-  font-size: clamp(56px, 13vw, 168px);
+  font-size: clamp(2rem, 8.5cqi, 6.5rem);
   line-height: 1; letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
   color: var(--accent);
@@ -114,7 +115,7 @@ button { font: inherit; color: inherit; }
   margin: 8px 0 6px;
   white-space: nowrap;
 }
-.clock.word { letter-spacing: 0.04em; font-size: clamp(48px, 11vw, 144px); }
+.clock.word { letter-spacing: 0.04em; font-size: clamp(1.75rem, 7.5cqi, 5.5rem); }
 .clock-sub { font-family: var(--mono); font-size: clamp(13px, 1.4vw, 16px); color: var(--dim); min-height: 1.4em; letter-spacing: 0.08em; }
 
 .status-row { display: flex; align-items: center; gap: 14px; margin-top: 18px; flex-wrap: wrap; }
@@ -166,15 +167,19 @@ button { font: inherit; color: inherit; }
 .ghost:hover { color: var(--fg); border-color: var(--fg); }
 
 /* strip */
-.strip-wrap { padding: 8px 28px 18px; border-top: 1px solid var(--line); background: linear-gradient(180deg, transparent, rgba(0,0,0,0.35)); }
+.strip-wrap {
+  min-width: 0;
+  padding: 8px 28px 18px; border-top: 1px solid var(--line);
+  background: linear-gradient(180deg, transparent, rgba(0,0,0,0.35));
+}
 .strip-head {
   display: flex; justify-content: space-between;
   font-family: var(--mono); font-size: 11px; letter-spacing: 0.3em; color: var(--dim);
   padding: 10px 0;
 }
 .strip {
-  display: grid; grid-auto-flow: column; grid-auto-columns: minmax(230px, 1fr);
-  gap: 12px; overflow-x: auto; padding-bottom: 6px;
+  display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr);
+  gap: 12px; overflow-x: auto; min-width: 0; padding-bottom: 6px;
   scrollbar-width: thin; scrollbar-color: var(--line) transparent;
 }
 .card {
