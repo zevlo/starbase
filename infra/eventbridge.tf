@@ -1,4 +1,4 @@
-# EventBridge schedules (cron is always UTC).
+# EventBridge schedules (cron is always UTC; the LL2 free tier allows 15 calls/hour/IP).
 #   upcoming: :00 :10 :20 :30 :40 :50   -> 6 calls/hour
 #   previous: :05 :35                   -> 2 calls/hour (optional)
 # Both target retries are disabled so the schedule itself is the only retry.
