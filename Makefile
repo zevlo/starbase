@@ -63,11 +63,12 @@ invoke:
 logs:
 	aws logs tail /aws/lambda/starbase-ingest --since 1h --format short
 
-## Demo: force the hero launch into HOLD. The next scheduled ingest restores truth from LL2.
+## Demo: force the hero launch into HOLD. ll_last_updated is rewound so the next
+## scheduled ingest (<= 10 min) sees "newer upstream data" and restores the truth from LL2.
 poke-hold:
 	@ID=$$(curl -s "$(API_URL)/api/v1/board?limit=1" | $(PY) -c 'import sys,json; print(json.load(sys.stdin)["hero"]["id"])'); \
 	echo "holding $$ID"; \
 	aws dynamodb update-item --table-name $(TABLE) \
 	  --key "{\"pk\":{\"S\":\"LAUNCH#$$ID\"},\"sk\":{\"S\":\"META\"}}" \
-	  --update-expression "SET status_abbrev = :s, status_name = :n, holdreason = :r" \
-	  --expression-attribute-values '{":s":{"S":"Hold"},":n":{"S":"On Hold"},":r":{"S":"Demo hold from the CLI"}}'
+	  --update-expression "SET status_abbrev = :s, status_name = :n, holdreason = :r, ll_last_updated = :old" \
+	  --expression-attribute-values '{":s":{"S":"Hold"},":n":{"S":"On Hold"},":r":{"S":"Demo hold from the CLI"},":old":{"S":"2000-01-01T00:00:00Z"}}'
