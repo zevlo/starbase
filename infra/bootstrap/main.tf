@@ -26,7 +26,17 @@ data "aws_caller_identity" "current" {}
 locals {
   account_id   = data.aws_caller_identity.current.account_id
   state_bucket = "starbase-tfstate-${local.account_id}"
-  repo_sub     = "repo:${var.github_owner}/${var.github_repo}"
+
+  # GitHub issues "immutable" subject claims that embed the owner and repository
+  # numeric IDs (repo:owner@<id>/name@<id>:...), which survive renames and cannot
+  # be spoofed by re-creating a deleted repo. Match that form, and the plain form
+  # for repos still on the legacy template.
+  repo_subs = [
+    "repo:${var.github_owner}@${var.github_owner_id}/${var.github_repo}@${var.github_repo_id}",
+    "repo:${var.github_owner}/${var.github_repo}",
+  ]
+  plan_subs  = flatten([for s in local.repo_subs : ["${s}:pull_request", "${s}:ref:refs/heads/*"]])
+  apply_subs = flatten([for s in local.repo_subs : ["${s}:ref:refs/heads/main", "${s}:environment:prod"]])
 }
 
 # ---------------------------------------------------------------------------
@@ -90,10 +100,7 @@ data "aws_iam_policy_document" "gha_plan_trust" {
     condition {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
-      values = [
-        "${local.repo_sub}:pull_request",
-        "${local.repo_sub}:ref:refs/heads/*",
-      ]
+      values   = local.plan_subs
     }
   }
 }
@@ -146,10 +153,7 @@ data "aws_iam_policy_document" "gha_apply_trust" {
     condition {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
-      values = [
-        "${local.repo_sub}:ref:refs/heads/main",
-        "${local.repo_sub}:environment:prod",
-      ]
+      values   = local.apply_subs
     }
   }
 }
