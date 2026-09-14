@@ -147,39 +147,6 @@ domain as the page, so cross-origin setup is unnecessary.
 - Dev switches: `?mock=go|hold|inflight` and
   `?api=https://<api-id>.execute-api.us-east-1.amazonaws.com`.
 
-## Run it on your computer
-
-```bash
-make venv && make test && make lint  # set up, test, lint
-make ingest-local                    # ingest from lldev (rate-limit-free, stale data)
-make ingest-fixture FIXTURE=fixtures/hold.json
-make web                             # serve the dashboard at http://localhost:8080/?mock=hold
-make poke-hold                       # force the live hero into HOLD; the next ingest restores truth
-```
-
-`lldev.thespacedevs.com` is a dev mirror for local use. Terraform variable
-validation rejects it when `environment = "prod"`.
-
-## Deploy your own copy
-
-1. `cd infra/bootstrap && terraform init && terraform apply` (admin
-   credentials, once).
-2. Set repo variables `AWS_PLAN_ROLE_ARN` and `AWS_APPLY_ROLE_ARN` from the
-   outputs.
-3. Push to `main`: `terraform.yml` applies the stack; set `SITE_BUCKET` and
-   `CLOUDFRONT_ID` from the outputs, and `site.yml` publishes `web/`.
-
-Both workflows assume their roles through GitHub OIDC; the repository stores
-zero AWS keys. The application is keyless too: Launch Library 2's free tier
-works without an API key.
-
-## What it costs
-
-Roughly $0.50 to $1.50 per month: DynamoDB on-demand costs pennies, Lambda and
-CloudFront stay inside the free tier, API Gateway costs about $0.10, and
-CloudWatch logs and alarms about $0.70. The `zevlo.net` hosted zone predates
-this project.
-
 ## Attribution
 
 Launch data: [Launch Library 2](https://thespacedevs.com/llapi) by
