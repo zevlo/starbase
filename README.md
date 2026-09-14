@@ -1,54 +1,91 @@
-# starbase — Launch Mission Control
+# starbase: Launch Mission Control
 
-**Live:** https://starbase.zevlo.net
+**Live dashboard:** https://starbase.zevlo.net
 
-An automated launch-state telemetry pipeline on AWS. Every ten minutes an EventBridge
-rule invokes a Lambda that polls [Launch Library 2](https://thespacedevs.com/llapi),
-normalises the next ~20 launches (NET, status, pad, webcast) and upserts them into
-DynamoDB. A read API (API Gateway + Lambda) and a CloudFront-hosted static dashboard
-serve that state; the browser never contacts the upstream. Everything is Terraform,
-deployed from GitHub Actions via OIDC.
+## What is starbase?
 
-> Designed and deployed an automated telemetry pipeline on AWS using EventBridge,
-> Lambda, and DynamoDB, provisioned with Terraform and GitHub Actions.
+Starbase is a live dashboard for upcoming rocket launches. It counts down to the
+next launch, flags holds, and links to the live video when one exists. A small
+JSON API serves the same data for anyone who wants to build on it. The pipeline
+behind it runs on AWS and refreshes the data automatically, every ten minutes,
+from [Launch Library 2](https://thespacedevs.com/llapi).
+
+## Highlights
+
+- **Fully serverless on AWS.** EventBridge does the scheduling, Lambda does the
+  computing, DynamoDB does the storage, API Gateway and CloudFront serve the
+  reads. Zero servers to patch or babysit.
+- **Everything is code.** One Terraform stack describes the whole system and can
+  deploy it to an empty AWS account in three steps (see below).
+- **Keyless deployments.** GitHub Actions proves its identity to AWS with OIDC,
+  an open identity standard, so the repository stores zero cloud credentials.
+- **Engineered around a hard limit.** The free data source allows 15 requests
+  per hour. The pipeline meters itself with a counter in DynamoDB and
+  hard-stops at 12, redeploys and retries included (details below).
+- **Tested and linted.** pytest with moto (a local DynamoDB stand-in), ruff,
+  terraform fmt, and JS syntax checks all run in CI.
+- **Inexpensive.** Roughly $0.50 to $1.50 per month at current traffic.
+
+## How it works
+
+Every ten minutes, an EventBridge schedule (AWS's cloud cron) starts the ingest
+function on Lambda. It asks Launch Library 2 for the next 20 launches, keeps the
+fields the dashboard needs (launch time, status, pad, webcast link), and saves
+each launch into DynamoDB, AWS's NoSQL database. Saving is safe to repeat:
+writing the same launch twice changes nothing. A second schedule runs the same
+function twice an hour to capture launches that just flew.
+
+Reading is a separate path. When you open https://starbase.zevlo.net, CloudFront
+(AWS's content-delivery network) serves the static page from a private S3 bucket
+and forwards `/api` requests to API Gateway, caching them for 30 seconds at the
+edge. A read function pulls the latest state from DynamoDB and returns JSON.
+Your browser talks only to starbase; the upstream site receives traffic solely
+from the ingest function.
+
+Deploys flow through GitHub Actions: a Terraform plan on every pull request, an
+apply on merge to `main`, and a site workflow that publishes the page.
 
 ```mermaid
 flowchart LR
-  ruleUp["EventBridge cron(0/10)"] -->|"job=upcoming"| ingest["Lambda starbase-ingest"]
-  rulePrev["EventBridge cron(5/30)"] -->|"job=previous"| ingest
+  ruleUp["EventBridge, every 10 min"] -->|"job=upcoming"| ingest["Lambda: starbase-ingest"]
+  rulePrev["EventBridge, every 30 min"] -->|"job=previous"| ingest
   ingest -->|"GET /launch/upcoming/?limit=20"| ll2["Launch Library 2"]
-  ingest -->|"conditional upsert + hourly call budget"| ddb[("DynamoDB starbase-launches")]
+  ingest -->|"save latest state (budgeted)"| ddb[("DynamoDB: starbase-launches")]
   browser["Browser"] -->|"https://starbase.zevlo.net"| cf["CloudFront"]
   cf -->|"/"| s3["S3 (private, OAC)"]
-  cf -->|"/api/* (30 s edge cache)"| apigw["API Gateway HTTP API"] --> readfn["Lambda starbase-read"] --> ddb
+  cf -->|"/api/*, 30 s edge cache"| apigw["API Gateway HTTP API"] --> readfn["Lambda: starbase-read"] --> ddb
   gha["GitHub Actions (OIDC)"] -.->|"plan on PR / apply on main"| aws["AWS"]
 ```
 
-## Why this is telemetry
+## Why polling fits
 
-Each launch is a remote object whose state changes over time: `net` slips,
-`status` moves `TBD → TBC → Go → In Flight → Success`, `webcast_live` flips.
-The pipeline samples that state on a fixed cadence, timestamps every observation
-(`last_seen_at`, `ll_last_updated`, `last_changed_at`), records transitions
-(`prev_status_abbrev`, structured `status_change` log events) and serves the
-latest state with staleness metadata (`/api/v1/health`). Volume is low, so a
-scheduler plus idempotent upserts is the right shape; Kinesis would be theatre.
+Each launch behaves like a telemetry source: its state changes over time. The
+launch time (`net`) slips. The status moves `TBD → TBC → Go → In Flight →
+Success`. The webcast flips live. The pipeline samples that state on a fixed
+cadence, stamps every observation with three timestamps (`last_seen_at`,
+`ll_last_updated`, `last_changed_at`), records transitions
+(`prev_status_abbrev`, plus structured `status_change` log events), and serves
+the latest state with staleness metadata (`/api/v1/health`). Volume is low, so a
+scheduler plus repeat-safe writes fits the problem. A streaming service would
+add cost and complexity while producing the same result.
 
-## Rate-limit math
+## Staying under the rate limit
 
-Launch Library 2's free tier allows **15 requests / hour / IP**.
+Launch Library 2's free tier allows **15 requests per hour, per IP**.
 
-| source | calls / hour |
+| source | calls per hour |
 |---|---|
-| `cron(0/10 * * * ? *)` upcoming | 6 |
-| `cron(5/30 * * * ? *)` previous | 2 |
-| retries (max 1 per invocation, 5xx/network only, never on 429) | up to 8 |
-| **hard cap** — DynamoDB conditional counter `RATE#LL2 / HOUR#<utc-hour>` | **12** |
+| upcoming ingest, every 10 minutes | 6 |
+| previous ingest, twice an hour | 2 |
+| retries (at most 1 per run; network and 5xx errors only, 429 excluded) | up to 8 |
+| **hard cap**: conditional counter in DynamoDB (`RATE#LL2 / HOUR#<utc-hour>`) | **12** |
 
-The counter is incremented with `ConditionExpression: calls < :cap` *before* every
-outbound request, so redeploys, manual invocations and retries cannot push past 12.
+Before every outbound request, the ingest increments an hourly counter in
+DynamoDB under the condition `calls < 12`; the request is skipped when the
+condition fails. This holds across redeploys, manual invocations, and retries.
 EventBridge target retries and Lambda async retries are both set to 0, and the
-function has reserved concurrency 1, so there are no hidden multipliers.
+function runs with reserved concurrency 1, so parallel executions are
+impossible and the budget has no hidden multipliers.
 
 ## Repository layout
 
@@ -59,14 +96,16 @@ lambdas/ingest/   ingest_handler.py, ll2.py, mapping.py, store.py, local_run.py
 lambdas/read/     read_handler.py, queries.py
 lambdas/tests/    pytest (moto for DynamoDB)
 fixtures/         captured LL2 payload + derived Hold / In Flight fixtures
-web/              static dashboard (no build step) + mock boards
+web/              static dashboard (plain HTML/CSS/JS) + mock boards
 scripts/          make_fixture.py, make_mocks.py
 .github/          ci.yml, terraform.yml (plan/apply), site.yml (S3 sync)
 ```
 
-## DynamoDB design
+## How the data is stored
 
-Single table `starbase-launches`, on-demand, TTL on `expires_at`, PITR on.
+One DynamoDB table, `starbase-launches`, holds everything. It bills on demand,
+expires items through a TTL on `expires_at`, and keeps point-in-time recovery
+on.
 
 | item | pk | sk | gsi1pk | gsi1sk |
 |---|---|---|---|---|
@@ -74,13 +113,16 @@ Single table `starbase-launches`, on-demand, TTL on `expires_at`, PITR on.
 | run marker | `META#INGEST` | `JOB#upcoming` / `JOB#previous` | | |
 | call budget | `RATE#LL2` | `HOUR#2026-09-07T05` | | |
 
-"Upcoming sorted by NET" is one `Query` on `gsi1-lane-net` (`gsi1pk = LANE#UPCOMING`,
-`gsi1sk >= now-6h`). ISO-8601 Zulu strings sort chronologically.
+"Upcoming launches, sorted by launch time" is a single Query on the index
+`gsi1-lane-net` (`gsi1pk = LANE#UPCOMING`, `gsi1sk >= now minus 6 hours`).
+Launch times are stored as ISO-8601 Zulu strings, which sort chronologically as
+plain text.
 
-## API
+## The API
 
-All routes are `GET`, JSON, `Cache-Control: public, max-age=30`, and reachable at
-`https://starbase.zevlo.net/api/v1/...` (same origin as the page, so CORS is moot).
+Every route is a `GET` that returns JSON with `Cache-Control: public,
+max-age=30`. They live at `https://starbase.zevlo.net/api/v1/...`, on the same
+domain as the page, so cross-origin setup is unnecessary.
 
 | route | purpose |
 |---|---|
@@ -89,46 +131,57 @@ All routes are `GET`, JSON, `Cache-Control: public, max-age=30`, and reachable a
 | `/api/v1/launches/{id}` | one launch |
 | `/api/v1/health` | run markers; **503** when ingest is > 30 min stale |
 
-## Dashboard rules
+## What the dashboard shows
 
-- Countdown ticks locally from the stored `net`; the board refreshes every 45 s ± 5 s.
-- `Hold` replaces the clock with **HOLD** (+ hold reason); `In Flight` shows **IN FLIGHT** with `T+`.
-- NETs with coarse precision (`DAY`+, or a bare `00:00:00Z`) render as `NET 30 SEP 2026`, not a fake countdown.
-- **WATCH LIVE** appears only when a `webcast_url` exists; it links out — no video is proxied.
-- `DATA STALE` chip when the API is unreachable or ingest is stale.
-- Dev switches: `?mock=go|hold|inflight`, `?api=https://<api-id>.execute-api.us-east-1.amazonaws.com`.
+- The countdown ticks locally from the stored launch time. The board refreshes
+  every 45 seconds, give or take 5.
+- A `Hold` replaces the clock with **HOLD** plus the hold reason; `In Flight`
+  shows **IN FLIGHT** with a `T+` timer.
+- Coarse launch times (day precision, or a bare `00:00:00Z`) render as a date
+  label, for example `NET 30 SEP 2026`. A countdown would be misleading for
+  those.
+- **WATCH LIVE** appears only when a `webcast_url` exists, and it links out to
+  the video.
+- A **DATA STALE** chip appears when the API is unreachable or the data is
+  stale.
+- Dev switches: `?mock=go|hold|inflight` and
+  `?api=https://<api-id>.execute-api.us-east-1.amazonaws.com`.
 
-## Local development
+## Run it on your computer
 
 ```bash
-make venv && make test && make lint
-make ingest-local                      # run ingest against lldev (unlimited, stale data)
+make venv && make test && make lint  # set up, test, lint
+make ingest-local                    # ingest from lldev (rate-limit-free, stale data)
 make ingest-fixture FIXTURE=fixtures/hold.json
-make web                               # http://localhost:8080/?mock=hold
-make poke-hold                         # force the live hero into HOLD; next ingest restores truth
+make web                             # serve the dashboard at http://localhost:8080/?mock=hold
+make poke-hold                       # force the live hero into HOLD; the next ingest restores truth
 ```
 
-`lldev.thespacedevs.com` is for local use only; the Terraform variable validation
-rejects it for `environment = "prod"`.
+`lldev.thespacedevs.com` is a dev mirror for local use. Terraform variable
+validation rejects it when `environment = "prod"`.
 
-## Deploy from an empty account
+## Deploy your own copy
 
-1. `cd infra/bootstrap && terraform init && terraform apply` (admin credentials, once).
-2. Set repo variables `AWS_PLAN_ROLE_ARN`, `AWS_APPLY_ROLE_ARN` from the outputs.
-3. Push to `main` — `terraform.yml` applies the stack; set `SITE_BUCKET` and
-   `CLOUDFRONT_ID` from the outputs and `site.yml` publishes `web/`.
+1. `cd infra/bootstrap && terraform init && terraform apply` (admin
+   credentials, once).
+2. Set repo variables `AWS_PLAN_ROLE_ARN` and `AWS_APPLY_ROLE_ARN` from the
+   outputs.
+3. Push to `main`: `terraform.yml` applies the stack; set `SITE_BUCKET` and
+   `CLOUDFRONT_ID` from the outputs, and `site.yml` publishes `web/`.
 
-No AWS access keys are stored anywhere; both workflows assume roles with GitHub OIDC.
-There are no application secrets — LL2's free tier needs no API key.
+Both workflows assume their roles through GitHub OIDC; the repository stores
+zero AWS keys. The application is keyless too: Launch Library 2's free tier
+works without an API key.
 
-## Cost
+## What it costs
 
-Roughly $0.50–1.50 / month: DynamoDB on-demand pennies, Lambda and CloudFront inside
-the free tier, API Gateway ~$0.10, CloudWatch logs/alarms ~$0.70. The `zevlo.net`
-hosted zone predates this project.
+Roughly $0.50 to $1.50 per month: DynamoDB on-demand costs pennies, Lambda and
+CloudFront stay inside the free tier, API Gateway costs about $0.10, and
+CloudWatch logs and alarms about $0.70. The `zevlo.net` hosted zone predates
+this project.
 
 ## Attribution
 
 Launch data: [Launch Library 2](https://thespacedevs.com/llapi) by
 [The Space Devs](https://thespacedevs.com). This project caches their free-tier
-API and links to their images and webcasts; it does not redistribute the feed.
+API and links out to their images and webcasts.
