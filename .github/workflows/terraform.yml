@@ -41,7 +41,7 @@ jobs:
           role-session-name: starbase-plan-${{ github.run_id }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - uses: hashicorp/setup-terraform@v3
+      - uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: "1.16.0"
           terraform_wrapper: false
@@ -101,7 +101,7 @@ jobs:
           role-session-name: starbase-apply-${{ github.run_id }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - uses: hashicorp/setup-terraform@v3
+      - uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: "1.16.0"
           terraform_wrapper: false
