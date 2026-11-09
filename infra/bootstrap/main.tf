@@ -228,6 +228,22 @@ data "aws_iam_policy_document" "gha_apply" {
     resources = ["*"]
   }
 
+  # Attaching API Gateway access logging requires these account-level
+  # (resource "*") delivery permissions; they cannot be scoped to log groups.
+  statement {
+    sid = "LogDelivery"
+    actions = [
+      "logs:CreateLogDelivery",
+      "logs:DeleteLogDelivery",
+      "logs:GetLogDelivery",
+      "logs:UpdateLogDelivery",
+      "logs:PutResourcePolicy",
+      "logs:DescribeResourcePolicies",
+      "logs:DescribeLogGroups",
+    ]
+    resources = ["*"]
+  }
+
   statement {
     sid     = "Logs"
     actions = ["logs:*"]
