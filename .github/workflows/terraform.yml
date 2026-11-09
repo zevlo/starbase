@@ -3,11 +3,11 @@ name: terraform
 # plan on pull requests (read-only role), apply on main (scoped apply role).
 # Authentication is GitHub OIDC -> AWS STS; there are no stored AWS keys.
 
-# AWS stack torn down (2026-11); auto-apply on push is disabled so merges to
-# main cannot recreate billable resources. Plan-on-PR stays for review value.
-# Resurrect with a manual run, then restore the push trigger.
 on:
   pull_request:
+    paths: ["infra/**", "lambdas/ingest/**", "lambdas/read/**", ".github/workflows/terraform.yml"]
+  push:
+    branches: [main]
     paths: ["infra/**", "lambdas/ingest/**", "lambdas/read/**", ".github/workflows/terraform.yml"]
   workflow_dispatch:
 
@@ -82,7 +82,7 @@ jobs:
             }
 
   apply:
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     name: apply
     runs-on: ubuntu-latest
     environment: prod
