@@ -31,7 +31,7 @@ jobs:
       BUCKET: ${{ vars.SITE_BUCKET }}
       DIST_ID: ${{ vars.CLOUDFRONT_ID }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: aws-actions/configure-aws-credentials@v4
         with:
