@@ -3,9 +3,14 @@ name: site
 # Sync web/ to the private S3 bucket behind CloudFront and invalidate the edge.
 # Assets get long immutable caching; index.html stays short so deploys show up fast.
 
-# AWS stack torn down (2026-11); triggers disabled so pushes cannot redeploy.
-# Resurrect with a manual run, then restore the push/workflow_run triggers.
 on:
+  push:
+    branches: [main]
+    paths: ["web/**", ".github/workflows/site.yml"]
+  workflow_run:
+    workflows: [terraform]
+    types: [completed]
+    branches: [main]
   workflow_dispatch:
 
 concurrency:

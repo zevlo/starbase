@@ -8,6 +8,8 @@ resource "aws_dynamodb_table" "launches" {
   hash_key     = "pk"
   range_key    = "sk"
 
+  deletion_protection_enabled = true
+
   attribute {
     name = "pk"
     type = "S"
@@ -51,5 +53,9 @@ resource "aws_dynamodb_table" "launches" {
 
   point_in_time_recovery {
     enabled = true
+  }
+
+  lifecycle {
+    prevent_destroy = true
   }
 }
