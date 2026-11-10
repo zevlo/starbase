@@ -78,6 +78,23 @@
     </footer>
   </main>
 
+  <!-- CAPCOM: the mission-control conversationalist. Hidden in mock mode (app.js). -->
+  <button class="capcom-btn" id="capcom-btn" type="button" hidden aria-expanded="false" aria-controls="capcom-panel">CAPCOM</button>
+  <section class="capcom-panel" id="capcom-panel" hidden aria-label="CAPCOM — ask mission control">
+    <header class="capcom-head">
+      <span class="capcom-title">CAPCOM <span class="dim">//</span> ASK MISSION CONTROL</span>
+      <span class="capcom-actions">
+        <button class="ghost" id="capcom-clear" type="button">NEW SESSION</button>
+        <button class="ghost" id="capcom-close" type="button" aria-label="Close CAPCOM">✕</button>
+      </span>
+    </header>
+    <div class="capcom-log" id="capcom-log" aria-live="polite"></div>
+    <form class="capcom-form" id="capcom-form">
+      <input class="capcom-input" id="capcom-input" type="text" maxlength="500" placeholder="Ask about launches…" autocomplete="off" />
+      <button class="capcom-send" id="capcom-send" type="submit">SEND</button>
+    </form>
+  </section>
+
   <template id="card-tpl">
     <button class="card" role="listitem" type="button">
       <div class="card-img"></div>

@@ -14,7 +14,7 @@ resource "aws_apigatewayv2_api" "api" {
 
   cors_configuration {
     allow_origins = ["http://localhost:8080", "http://localhost:5173", "http://127.0.0.1:8080"]
-    allow_methods = ["GET"]
+    allow_methods = ["GET", "POST"]
     allow_headers = ["content-type"]
     max_age       = 3600
   }
@@ -27,6 +27,15 @@ resource "aws_apigatewayv2_integration" "read" {
   integration_method     = "POST"
   payload_format_version = "2.0"
   timeout_milliseconds   = 10000
+}
+
+resource "aws_apigatewayv2_integration" "ask" {
+  api_id                 = aws_apigatewayv2_api.api.id
+  integration_type       = "AWS_PROXY"
+  integration_uri        = aws_lambda_function.ask.invoke_arn
+  integration_method     = "POST"
+  payload_format_version = "2.0"
+  timeout_milliseconds   = 30000
 }
 
 locals {
@@ -45,6 +54,14 @@ resource "aws_apigatewayv2_route" "read" {
   target    = "integrations/${aws_apigatewayv2_integration.read.id}"
 }
 
+# The only POST: it spends model tokens, so it gets its own tight throttle on
+# the stage below (the DDB daily quota in the ask handler is the hard cap).
+resource "aws_apigatewayv2_route" "ask" {
+  api_id    = aws_apigatewayv2_api.api.id
+  route_key = "POST /api/v1/ask"
+  target    = "integrations/${aws_apigatewayv2_integration.ask.id}"
+}
+
 resource "aws_apigatewayv2_stage" "default" {
   api_id      = aws_apigatewayv2_api.api.id
   name        = "$default"
@@ -53,6 +70,12 @@ resource "aws_apigatewayv2_stage" "default" {
   default_route_settings {
     throttling_burst_limit = 50
     throttling_rate_limit  = 20
+  }
+
+  route_settings {
+    route_key              = "POST /api/v1/ask"
+    throttling_burst_limit = 5
+    throttling_rate_limit  = 2
   }
 
   access_log_settings {
@@ -68,6 +91,14 @@ resource "aws_apigatewayv2_stage" "default" {
       integrationErr = "$context.integrationErrorMessage"
     })
   }
+}
+
+resource "aws_lambda_permission" "apigw_ask" {
+  statement_id  = "AllowApiGatewayInvokeAsk"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.ask.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.api.execution_arn}/*/*/api/*"
 }
 
 resource "aws_lambda_permission" "apigw_read" {

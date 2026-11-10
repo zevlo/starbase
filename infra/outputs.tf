@@ -30,3 +30,12 @@ output "cloudfront_url" {
 output "site_url" {
   value = "https://${var.site_domain}"
 }
+
+output "agent_api_url" {
+  description = "AgentCore Gateway MCP endpoint: the read API as agent-callable tools"
+  value       = aws_bedrockagentcore_gateway.agent_api.gateway_url
+}
+
+output "copilot_runtime_arn" {
+  value = aws_bedrockagentcore_agent_runtime.copilot.agent_runtime_arn
+}

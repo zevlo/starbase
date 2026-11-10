@@ -7,7 +7,7 @@ API_URL   ?= $(shell cd infra && terraform output -raw api_url 2>/dev/null)
 BUCKET    ?= $(shell cd infra && terraform output -raw site_bucket 2>/dev/null)
 DIST_ID   ?= $(shell cd infra && terraform output -raw cloudfront_id 2>/dev/null)
 
-.PHONY: venv test lint fmt ingest-local ingest-fixture fixtures mocks web plan apply deploy-site invoke logs poke-hold
+.PHONY: venv test lint fmt ingest-local ingest-fixture fixtures mocks web plan apply deploy-site invoke logs poke-hold zips agent-zip ask-zip ask
 
 venv:
 	python3 -m venv .venv && .venv/bin/pip install -q pytest "moto[dynamodb]" boto3 ruff
@@ -16,11 +16,11 @@ test:
 	$(PYTEST)
 
 lint:
-	$(RUFF) check lambdas scripts && $(RUFF) format --check lambdas scripts && node --check web/app.js
+	$(RUFF) check lambdas agents scripts && $(RUFF) format --check lambdas agents scripts && node --check web/app.js
 	cd infra && terraform fmt -check -recursive
 
 fmt:
-	$(RUFF) check --fix lambdas scripts && $(RUFF) format lambdas scripts
+	$(RUFF) check --fix lambdas agents scripts && $(RUFF) format lambdas agents scripts
 	cd infra && terraform fmt -recursive
 
 ## Run the ingest handler locally against the unlimited dev mirror (stale data, no rate limit).
@@ -44,10 +44,28 @@ mocks:
 web:
 	cd web && python3 -m http.server 8080
 
-plan:
+## Build the deployable zips. ask bundles a current boto3 (the Lambda runtime's
+## is too old for the bedrock-agentcore client); agent bundles the strands +
+## bedrock-agentcore SDKs against the AgentCore runtime's linux x86_64 python 3.12.
+zips: agent-zip ask-zip
+
+agent-zip:
+	rm -rf infra/build/agent-zip infra/build/agent.zip && mkdir -p infra/build/agent-zip
+	$(PY) -m pip install -q -r agents/copilot/requirements.txt \
+	  --target infra/build/agent-zip --platform manylinux2014_x86_64 --only-binary=:all: --python-version 3.12
+	cp agents/copilot/agent.py agents/copilot/tools.py lambdas/read/queries.py infra/build/agent-zip/
+	cd infra/build/agent-zip && zip -qr ../agent.zip .
+
+ask-zip:
+	rm -rf infra/build/ask-zip infra/build/ask.zip && mkdir -p infra/build/ask-zip
+	$(PY) -m pip install -q "boto3>=1.40" --target infra/build/ask-zip
+	cp lambdas/ask/ask_handler.py infra/build/ask-zip/
+	cd infra/build/ask-zip && zip -qr ../ask.zip .
+
+plan: zips
 	cd infra && terraform plan
 
-apply:
+apply: zips
 	cd infra && terraform apply
 
 ## Manual site deploy (CI does this on push to main).
@@ -62,6 +80,12 @@ invoke:
 
 logs:
 	aws logs tail /aws/lambda/starbase-ingest --since 1h --format short
+
+## Ask the deployed CAPCOM one question (consumes 1 unit of the daily quota).
+ask:
+	@curl -s -X POST "$(API_URL)/api/v1/ask" -H 'Content-Type: application/json' \
+	  -d '{"question":"$(Q)","session_id":"11111111-1111-1111-1111-111111111111"}' \
+	  | $(PY) -c 'import sys,json; d=json.load(sys.stdin); print(d.get("answer") or d)'
 
 ## Demo: force the hero launch into HOLD. ll_last_updated is rewound so the next
 ## scheduled ingest (<= 10 min) sees "newer upstream data" and restores the truth from LL2.

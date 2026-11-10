@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-for sub in ("lambdas/ingest", "lambdas/read"):
+for sub in ("lambdas/ingest", "lambdas/read", "lambdas/ask", "agents/copilot"):
     p = str(ROOT / sub)
     if p not in sys.path:
         sys.path.insert(0, p)
@@ -16,6 +16,8 @@ os.environ.setdefault("AWS_SECURITY_TOKEN", "testing")
 os.environ.setdefault("AWS_SESSION_TOKEN", "testing")
 os.environ["DISABLE_METRICS"] = "1"
 os.environ["TABLE_NAME"] = "starbase-launches-test"
+os.environ["AGENT_RUNTIME_ARN"] = "arn:aws:bedrock-agentcore:us-east-1:111122223333:runtime/starbase-copilot/xyz"
+os.environ["DAILY_LIMIT"] = "300"
 os.environ["RETRY_DELAY_SECONDS"] = "0"
 
 FIXTURES = ROOT / "fixtures"

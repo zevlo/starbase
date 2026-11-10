@@ -70,6 +70,23 @@ variable "github_repo_url" {
   default     = "https://github.com/zevlo/starbase"
 }
 
+variable "copilot_model_id" {
+  type        = string
+  description = "Bedrock model behind CAPCOM. A cross-region inference profile (us.*) is recommended."
+  default     = "us.amazon.nova-lite-v1:0"
+}
+
+variable "copilot_daily_limit" {
+  type        = number
+  description = "Hard cap on CAPCOM questions per UTC day, shared across all visitors, enforced by a DynamoDB counter."
+  default     = 300
+
+  validation {
+    condition     = var.copilot_daily_limit >= 1 && var.copilot_daily_limit <= 10000
+    error_message = "copilot_daily_limit must be between 1 and 10000."
+  }
+}
+
 variable "log_retention_days" {
   type    = number
   default = 14

@@ -5,11 +5,11 @@ addopts = "-q"
 [tool.ruff]
 line-length = 120
 target-version = "py312"
-src = ["lambdas/ingest", "lambdas/read"]
+src = ["lambdas/ingest", "lambdas/read", "lambdas/ask", "agents/copilot"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP"]
 ignore = ["E501"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["ingest_handler", "ll2", "mapping", "store", "read_handler", "queries"]
+known-first-party = ["ingest_handler", "ll2", "mapping", "store", "read_handler", "queries", "ask_handler", "tools", "agent"]

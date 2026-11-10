@@ -31,6 +31,9 @@
     watch: $("watch"), watchText: $("watch-text"), autoBtn: $("auto-btn"),
     strip: $("strip"), stripCount: $("strip-count"), stale: $("stale-chip"), mock: $("mock-chip"),
     utc: $("utc-clock"), updated: $("updated"), cardTpl: $("card-tpl"),
+    capBtn: $("capcom-btn"), capPanel: $("capcom-panel"), capLog: $("capcom-log"),
+    capForm: $("capcom-form"), capInput: $("capcom-input"), capSend: $("capcom-send"),
+    capClear: $("capcom-clear"), capClose: $("capcom-close"),
   };
 
   const state = {
@@ -352,6 +355,101 @@
   }
 
   function loop() { tick(); requestAnimationFrame(loop); }
+
+  // ---------------------------------------------------------------------------
+  // CAPCOM: the mission-control conversationalist.
+  // Plain-text answers only (textContent; answers are untrusted), a static
+  // Launch Library 2 attribution footer on every reply, session id dies with
+  // the tab (sessionStorage). Hidden in mock mode — a mock board has no truth.
+  const CAPCOM_SESSION_KEY = "starbase-capcom-session";
+  let capcomBusy = false;
+
+  function capcomSession(reset = false) {
+    if (reset) sessionStorage.removeItem(CAPCOM_SESSION_KEY);
+    let id = sessionStorage.getItem(CAPCOM_SESSION_KEY);
+    if (!id) {
+      id = crypto.randomUUID();
+      sessionStorage.setItem(CAPCOM_SESSION_KEY, id);
+    }
+    return id;
+  }
+
+  function capcomMsg(text, who) {
+    const div = document.createElement("div");
+    div.className = `capcom-msg ${who}`;
+    const body = document.createElement("span");
+    body.className = "capcom-msg-text";
+    body.textContent = text;
+    div.appendChild(body);
+    if (who === "capcom") {
+      const src = document.createElement("span");
+      src.className = "capcom-msg-src";
+      src.textContent = "Data: Launch Library 2";
+      div.appendChild(src);
+    }
+    el.capLog.appendChild(div);
+    el.capLog.scrollTop = el.capLog.scrollHeight;
+    return div;
+  }
+
+  function setCapcomMsg(div, text, who) {
+    div.className = `capcom-msg ${who}`;
+    div.querySelector(".capcom-msg-text").textContent = text;
+    el.capLog.scrollTop = el.capLog.scrollHeight;
+  }
+
+  function capcomSetBusy(busy) {
+    capcomBusy = busy;
+    el.capInput.disabled = busy;
+    el.capSend.disabled = busy;
+    if (!busy) el.capInput.focus();
+  }
+
+  function capcomToggle(open) {
+    const show = open ?? el.capPanel.hidden;
+    el.capPanel.hidden = !show;
+    el.capBtn.setAttribute("aria-expanded", String(show));
+    if (show) el.capInput.focus();
+  }
+
+  async function capcomSubmit(ev) {
+    ev.preventDefault();
+    const question = el.capInput.value.trim();
+    if (!question || capcomBusy) return;
+    el.capInput.value = "";
+    capcomSetBusy(true);
+    capcomMsg(question, "you");
+    const pending = capcomMsg("STAND BY", "capcom thinking");
+    try {
+      const res = await fetch(`${API_BASE}/api/v1/ask`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question, session_id: capcomSession() }),
+      });
+      const data = await res.json().catch(() => null);
+      if (res.status === 429) {
+        setCapcomMsg(pending, "CAPCOM's daily quota is used up. Back at 00:00 UTC.", "capcom sys");
+        return;
+      }
+      if (!res.ok || !data || typeof data.answer !== "string") throw new Error(`HTTP ${res.status}`);
+      setCapcomMsg(pending, data.answer, "capcom");
+    } catch (err) {
+      console.warn("capcom ask failed", err);
+      setCapcomMsg(pending, "CAPCOM is unreachable. The board itself is unaffected.", "capcom sys");
+    } finally {
+      capcomSetBusy(false);
+    }
+  }
+
+  el.capBtn.hidden = !!MOCK; // a mock board is a static demo; no live copilot inside it
+  el.capBtn.addEventListener("click", () => capcomToggle());
+  el.capClose.addEventListener("click", () => capcomToggle(false));
+  el.capForm.addEventListener("submit", capcomSubmit);
+  el.capClear.addEventListener("click", () => {
+    capcomSession(true);
+    el.capLog.replaceChildren();
+    capcomMsg("New session. CAPCOM standing by.", "capcom sys");
+  });
 
   // ---------------------------------------------------------------------------
   refresh();

@@ -5,10 +5,10 @@ name: terraform
 
 on:
   pull_request:
-    paths: ["infra/**", "lambdas/ingest/**", "lambdas/read/**", ".github/workflows/terraform.yml"]
+    paths: ["infra/**", "lambdas/**", "agents/**", ".github/workflows/terraform.yml"]
   push:
     branches: [main]
-    paths: ["infra/**", "lambdas/ingest/**", "lambdas/read/**", ".github/workflows/terraform.yml"]
+    paths: ["infra/**", "lambdas/**", "agents/**", ".github/workflows/terraform.yml"]
   workflow_dispatch:
 
 concurrency:
@@ -35,6 +35,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
       - uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ vars.AWS_PLAN_ROLE_ARN }}
@@ -45,6 +49,9 @@ jobs:
         with:
           terraform_version: "1.16.0"
           terraform_wrapper: false
+
+      - name: build deployable zips (ask + agent)
+        run: make zips
 
       - run: terraform init
       - run: terraform validate -no-color
@@ -95,6 +102,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
       - uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ vars.AWS_APPLY_ROLE_ARN }}
@@ -105,6 +116,9 @@ jobs:
         with:
           terraform_version: "1.16.0"
           terraform_wrapper: false
+
+      - name: build deployable zips (ask + agent)
+        run: make zips
 
       - run: terraform init
       - run: terraform validate -no-color
@@ -118,7 +132,7 @@ jobs:
             echo
             echo '| output | value |'
             echo '|---|---|'
-            for k in site_url cloudfront_url api_url table_name ingest_function_name; do
+            for k in site_url cloudfront_url api_url agent_api_url table_name ingest_function_name; do
               echo "| $k | $(terraform output -raw $k) |"
             done
           } >> "$GITHUB_STEP_SUMMARY"
