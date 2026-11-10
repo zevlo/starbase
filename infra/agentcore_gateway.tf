@@ -40,10 +40,14 @@ resource "aws_bedrockagentcore_gateway_target" "api" {
   gateway_identifier = aws_bedrockagentcore_gateway.agent_api.gateway_id
   description        = "starbase public read API (OpenAPI); every call rides the same path browsers use"
 
-  # The API Gateway endpoint is unauthenticated; the empty role block satisfies
-  # the required credential provider without SigV4-signing upstream calls.
+  # The upstream API Gateway endpoints are unauthenticated; the gateway
+  # SigV4-signs with its own role (API GW ignores the signature on routes
+  # with auth NONE). An explicit service name is required for openApiSchema
+  # targets — an empty role block fails service-side validation.
   credential_provider_configuration {
-    gateway_iam_role {}
+    gateway_iam_role {
+      service = "execute-api"
+    }
   }
 
   target_configuration {

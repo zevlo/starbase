@@ -157,11 +157,13 @@ resource "aws_cloudfront_distribution" "cdn" {
   }
 
   ordered_cache_behavior {
-    path_pattern             = "/api/*"
-    target_origin_id         = local.api_origin_id
-    viewer_protocol_policy   = "https-only"
-    allowed_methods          = ["GET", "HEAD", "OPTIONS", "POST"] # POST = /api/v1/ask
-    cached_methods           = ["GET", "HEAD"]                    # POSTs are never cached
+    path_pattern           = "/api/*"
+    target_origin_id       = local.api_origin_id
+    viewer_protocol_policy = "https-only"
+    # CloudFront accepts only fixed method sets; the 7-method set is the way
+    # to allow POST through (cached_methods stays GET/HEAD, so /ask is uncached).
+    allowed_methods          = ["HEAD", "DELETE", "POST", "GET", "OPTIONS", "PUT", "PATCH"]
+    cached_methods           = ["GET", "HEAD"]
     compress                 = true
     cache_policy_id          = aws_cloudfront_cache_policy.api.id
     origin_request_policy_id = data.aws_cloudfront_origin_request_policy.all_viewer_except_host.id

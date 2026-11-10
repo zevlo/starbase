@@ -91,6 +91,10 @@ resource "aws_apigatewayv2_stage" "default" {
       integrationErr = "$context.integrationErrorMessage"
     })
   }
+
+  # route_settings names the ask route, which must exist before the stage will
+  # accept it.
+  depends_on = [aws_apigatewayv2_route.read, aws_apigatewayv2_route.ask]
 }
 
 resource "aws_lambda_permission" "apigw_ask" {
