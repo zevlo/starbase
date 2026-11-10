@@ -200,7 +200,7 @@ button { font: inherit; color: inherit; }
 
 /* footer */
 .foot {
-  display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  display: grid; grid-template-columns: 1fr auto 1fr; gap: 16px;
   padding: 12px 28px 16px; border-top: 1px solid var(--line);
   font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em; color: var(--dim);
 }
@@ -209,6 +209,7 @@ button { font: inherit; color: inherit; }
 
 @media (max-width: 700px) {
   .topbar, .stage, .strip-wrap, .foot { padding-left: 16px; padding-right: 16px; }
+  .foot { grid-template-columns: 1fr; justify-items: center; text-align: center; }
   .strip { grid-auto-flow: row; grid-auto-columns: unset; grid-template-columns: 1fr; }
   .card { grid-template-rows: 70px auto; }
   .brand-text { font-size: 11px; }
