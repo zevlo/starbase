@@ -1,4 +1,6 @@
-PY        ?= .venv/bin/python
+# Absolute path when the local venv exists; otherwise plain python3 (CI, which
+# installs nothing into .venv but runs setup-python first).
+PY        ?= $(shell if [ -x .venv/bin/python ]; then echo "$$PWD/.venv/bin/python"; else echo python3; fi)
 PYTEST    ?= .venv/bin/pytest
 RUFF      ?= .venv/bin/ruff
 TABLE     ?= starbase-launches
@@ -54,13 +56,13 @@ agent-zip:
 	$(PY) -m pip install -q -r agents/copilot/requirements.txt \
 	  --target infra/build/agent-zip --platform manylinux2014_x86_64 --only-binary=:all: --python-version 3.12
 	cp agents/copilot/agent.py agents/copilot/tools.py lambdas/read/queries.py infra/build/agent-zip/
-	cd infra/build/agent-zip && zip -qr ../agent.zip .
+	cd infra/build/agent-zip && $(PY) -c "import shutil; shutil.make_archive('../agent', 'zip', '.')"
 
 ask-zip:
 	rm -rf infra/build/ask-zip infra/build/ask.zip && mkdir -p infra/build/ask-zip
 	$(PY) -m pip install -q "boto3>=1.40" --target infra/build/ask-zip
 	cp lambdas/ask/ask_handler.py infra/build/ask-zip/
-	cd infra/build/ask-zip && zip -qr ../ask.zip .
+	cd infra/build/ask-zip && $(PY) -c "import shutil; shutil.make_archive('../ask', 'zip', '.')"
 
 plan: zips
 	cd infra && terraform plan
