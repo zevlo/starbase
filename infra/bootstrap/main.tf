@@ -279,6 +279,55 @@ data "aws_iam_policy_document" "gha_apply" {
     }
   }
 
+  # CAPCOM runs on AgentCore: the runtime and the Agent API gateway assume
+  # starbase-* roles, and apply manages their control plane. List/describe
+  # calls are account-scoped, so they get the service's ARN space plus "*"
+  # for the List APIs only.
+  statement {
+    sid       = "BedrockAgentCoreScoped"
+    actions   = ["bedrock-agentcore:*"]
+    resources = ["arn:aws:bedrock-agentcore:${var.region}:${local.account_id}:*"]
+  }
+
+  statement {
+    sid       = "BedrockAgentCoreList"
+    actions   = ["bedrock-agentcore:List*"]
+    resources = ["*"]
+  }
+
+  statement {
+    sid       = "IamPassRoleToAgentCore"
+    actions   = ["iam:PassRole"]
+    resources = ["arn:aws:iam::${local.account_id}:role/starbase-*"]
+    condition {
+      test     = "StringEquals"
+      variable = "iam:PassedToService"
+      values   = ["bedrock-agentcore.amazonaws.com"]
+    }
+  }
+
+  # The WAF rate rule guarding POST /api/v1/ask lives in front of CloudFront,
+  # so its ACLs sit in the "global" ARN space; association also names the
+  # distribution itself.
+  statement {
+    sid = "Wafv2Acls"
+    actions = [
+      "wafv2:CreateWebACL", "wafv2:UpdateWebACL", "wafv2:DeleteWebACL", "wafv2:GetWebACL",
+      "wafv2:AssociateWebACL", "wafv2:DisassociateWebACL",
+      "wafv2:TagResource", "wafv2:UntagResource", "wafv2:ListTagsForResource",
+    ]
+    resources = [
+      "arn:aws:wafv2:${var.region}:${local.account_id}:global/webacl/starbase-*/*",
+      "arn:aws:cloudfront:${local.account_id}:distribution/*",
+    ]
+  }
+
+  statement {
+    sid       = "Wafv2List"
+    actions   = ["wafv2:ListWebACLs"]
+    resources = ["*"]
+  }
+
   # The CI roles must not be able to modify themselves or each other.
   statement {
     sid     = "DenySelfEscalation"
