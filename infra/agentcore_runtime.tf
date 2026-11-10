@@ -37,7 +37,8 @@ resource "aws_s3_bucket_public_access_block" "artifacts" {
 resource "aws_s3_object" "copilot_zip" {
   bucket        = aws_s3_bucket.artifacts.id
   key           = "copilot/agent.zip"
-  source        = "${path.module}/build/agent.zip" # `make agent-zip` before plan/apply
+  source        = "${path.module}/build/agent.zip"          # `make agent-zip` before plan/apply
+  source_hash   = filemd5("${path.module}/build/agent.zip") # multipart uploads can't diff by etag
   content_type  = "application/zip"
   force_destroy = true
 }
@@ -117,7 +118,8 @@ resource "aws_bedrockagentcore_agent_runtime" "copilot" {
   }
 
   lifecycle_configuration {
-    idle_runtime_session_timeout = 600 # sessions survive a coffee break, not a day
+    idle_runtime_session_timeout = 600   # sessions survive a coffee break, not a day
+    max_lifetime                 = 28800 # the service default; set explicitly or the provider cries bug
   }
 
   depends_on = [aws_iam_role_policy.copilot]

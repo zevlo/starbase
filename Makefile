@@ -48,13 +48,13 @@ web:
 
 ## Build the deployable zips. ask bundles a current boto3 (the Lambda runtime's
 ## is too old for the bedrock-agentcore client); agent bundles the strands +
-## bedrock-agentcore SDKs against the AgentCore runtime's linux x86_64 python 3.12.
+## bedrock-agentcore SDKs against the AgentCore runtime's linux ARM64 python 3.12.
 zips: agent-zip ask-zip
 
 agent-zip:
 	rm -rf infra/build/agent-zip infra/build/agent.zip && mkdir -p infra/build/agent-zip
 	$(PY) -m pip install -q -r agents/copilot/requirements.txt \
-	  --target infra/build/agent-zip --platform manylinux2014_x86_64 --only-binary=:all: --python-version 3.12
+	  --target infra/build/agent-zip --platform manylinux2014_aarch64 --only-binary=:all: --python-version 3.12
 	cp agents/copilot/agent.py agents/copilot/tools.py lambdas/read/queries.py infra/build/agent-zip/
 	cd infra/build/agent-zip && $(PY) -c "import shutil; shutil.make_archive('../agent', 'zip', '.')"
 
