@@ -66,16 +66,19 @@ data "aws_iam_policy_document" "copilot" {
       "bedrock:InvokeModelWithResponseStream",
     ]
     resources = [
-      "arn:aws:bedrock:*:::foundation-model/*",
+      "arn:aws:bedrock:*::foundation-model/*", # foundation-model ARNs carry no account segment
       "arn:aws:bedrock:*:${local.account_id}:inference-profile/*",
       "arn:aws:bedrock:*:${local.account_id}:applied-model/*",
     ]
   }
 
   statement {
-    sid       = "Logs"
-    actions   = ["logs:CreateLogStream", "logs:PutLogEvents"]
-    resources = ["arn:aws:logs:*:${local.account_id}:log-group:/aws/bedrock-agentcore/*:*"]
+    sid     = "Logs"
+    actions = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"]
+    resources = [
+      "arn:aws:logs:*:${local.account_id}:log-group:/aws/bedrock-agentcore/*",
+      "arn:aws:logs:*:${local.account_id}:log-group:/aws/bedrock-agentcore/*:*",
+    ]
   }
 }
 
