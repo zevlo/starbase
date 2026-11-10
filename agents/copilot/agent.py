@@ -6,9 +6,10 @@ loop. The ask Lambda (lambdas/ask) is the only intended caller: it forwards
 {"question", "session_id"} and renders {"answer"} back to the browser.
 
 The Answer Policy (CONTEXT.md) is encoded in SYSTEM_PROMPT: launch facts come
-only from tools over stored state; general space knowledge is allowed with a
-disclosure. The Knowledge Boundary (ADR 0001) is structural — tools.py has no
-function that can leave the table.
+only from tools over stored state; general space knowledge is allowed from
+the model's own knowledge. sanitize_answer strips any reasoning tags the
+model leaks anyway. The Knowledge Boundary (ADR 0001) is structural — tools.py
+has no function that can leave the table.
 
 History: the runtime routes one session to one process, so per-session Agent
 instances in module state are per-user conversation memory. History is capped
@@ -29,6 +30,7 @@ from strands import tool as strands_tool
 from strands.models import BedrockModel
 
 import tools
+from sanitize import sanitize_answer
 
 app = BedrockAgentCoreApp()
 
@@ -54,8 +56,7 @@ Answer Policy — two tiers, never blended:
    launches older than 30 days, NET-slip history, status timelines.
 2. General space knowledge (what Falcon 9 is, what a scrub means, how orbits
    work) may be answered from your own knowledge — but ONLY when no tool was
-   needed to answer. End those answers, and only those, with a final line:
-   (general knowledge — not from starbase's live data)
+   needed to answer.
 
 Data honesty: the ingest block in board and health results says how old the
 data is; when it is stale, say so before giving launch facts. Coarse NETs
@@ -117,12 +118,23 @@ def _agent_for(session_id: str) -> Agent:
     return agent
 
 
+def _scrub_history(agent: Agent) -> None:
+    """Keep leaked reasoning/disclosure text out of future turns' context."""
+    for message in agent.messages:
+        content = message.get("content") if isinstance(message, dict) else None
+        if not isinstance(content, list):
+            continue
+        for block in content:
+            if isinstance(block, dict) and isinstance(block.get("text"), str):
+                block["text"] = sanitize_answer(block["text"])
+
+
 def _answer_text(result: Any) -> str:
     message = getattr(result, "message", None) or {}
     parts = []
     for block in message.get("content", []) if isinstance(message, dict) else []:
         if isinstance(block, dict) and isinstance(block.get("text"), str):
-            parts.append(block["text"])
+            parts.append(sanitize_answer(block["text"]))
     return "\n".join(p for p in parts if p).strip() or "(no answer)"
 
 
@@ -133,7 +145,9 @@ def capcom(payload: dict) -> dict:
     if not question or len(question) > MAX_QUESTION_CHARS:
         return {"ok": False, "answer": "Ask a plain question, up to 500 characters."}
     try:
-        result = _agent_for(session_id)(question)
+        agent = _agent_for(session_id)
+        result = agent(question)
+        _scrub_history(agent)
         return {"ok": True, "answer": _answer_text(result)}
     except Exception:
         LOG.exception("capcom turn failed (session %s)", session_id[:8])

@@ -12,4 +12,4 @@ select = ["E", "F", "W", "I", "B", "UP"]
 ignore = ["E501"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["ingest_handler", "ll2", "mapping", "store", "read_handler", "queries", "ask_handler", "tools", "agent"]
+known-first-party = ["ingest_handler", "ll2", "mapping", "store", "read_handler", "queries", "ask_handler", "tools", "agent", "sanitize"]

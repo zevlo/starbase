@@ -36,7 +36,7 @@ The mission-control conversationalist: the chat persona that answers visitor que
 _Avoid_: chatbot, copilot, assistant, "Ask starbase"
 
 **Answer Policy**:
-Two-tier contract: launch facts (dates, statuses, schedules, vehicles, pads, missions, holds, webcasts) come only from stored state; general space knowledge is answered with a disclosure that it is not live data.
+Two-tier contract: launch facts (dates, statuses, schedules, vehicles, pads, missions, holds, webcasts) come only from stored state; general space knowledge is answered from the model's own knowledge, with no marker.
 
 **Knowledge Boundary**:
 CAPCOM knows the starbase table and nothing else. Launch Library 2 is never a CAPCOM tool (see ADR 0001).

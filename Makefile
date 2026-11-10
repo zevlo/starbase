@@ -55,7 +55,7 @@ agent-zip:
 	rm -rf infra/build/agent-zip infra/build/agent.zip && mkdir -p infra/build/agent-zip
 	$(PY) -m pip install -q -r agents/copilot/requirements.txt \
 	  --target infra/build/agent-zip --platform manylinux2014_aarch64 --only-binary=:all: --python-version 3.12
-	cp agents/copilot/agent.py agents/copilot/tools.py lambdas/read/queries.py infra/build/agent-zip/
+	cp agents/copilot/agent.py agents/copilot/tools.py agents/copilot/sanitize.py lambdas/read/queries.py infra/build/agent-zip/
 	cd infra/build/agent-zip && $(PY) -c "import shutil; shutil.make_archive('../agent', 'zip', '.')"
 
 ask-zip:
