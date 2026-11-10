@@ -52,6 +52,7 @@ jobs:
 
       - name: build deployable zips (ask + agent)
         run: make zips
+        working-directory: .
 
       - run: terraform init
       - run: terraform validate -no-color
@@ -119,6 +120,7 @@ jobs:
 
       - name: build deployable zips (ask + agent)
         run: make zips
+        working-directory: .
 
       - run: terraform init
       - run: terraform validate -no-color
