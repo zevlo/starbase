@@ -16,9 +16,14 @@ resource "aws_iam_role" "ask" {
 
 data "aws_iam_policy_document" "ask" {
   statement {
-    sid       = "InvokeCopilot"
-    actions   = ["bedrock-agentcore:InvokeAgentRuntime"]
-    resources = [aws_bedrockagentcore_agent_runtime.copilot.agent_runtime_arn]
+    sid     = "InvokeCopilot"
+    actions = ["bedrock-agentcore:InvokeAgentRuntime"]
+    # The data plane evaluates against the runtime ENDPOINT arn
+    # (.../runtime/<id>/runtime-endpoint/DEFAULT), not the runtime arn itself.
+    resources = [
+      aws_bedrockagentcore_agent_runtime.copilot.agent_runtime_arn,
+      "${aws_bedrockagentcore_agent_runtime.copilot.agent_runtime_arn}/*",
+    ]
   }
 
   statement {
