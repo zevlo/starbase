@@ -444,6 +444,7 @@
   el.capBtn.hidden = !!MOCK; // a mock board is a static demo; no live copilot inside it
   el.capBtn.addEventListener("click", () => capcomToggle());
   el.capClose.addEventListener("click", () => capcomToggle(false));
+  el.capInput.addEventListener("focus", () => el.capInput.scrollIntoView({ behavior: "smooth", block: "center" }));
   el.capForm.addEventListener("submit", capcomSubmit);
   el.capClear.addEventListener("click", () => {
     capcomSession(true);
