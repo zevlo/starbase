@@ -128,6 +128,7 @@ resource "aws_cloudfront_distribution" "cdn" {
   price_class         = "PriceClass_100"
   http_version        = "http2and3"
   aliases             = [var.site_domain]
+  web_acl_id          = aws_wafv2_web_acl.ask_rate.arn # rate rule on /api/v1/ask
 
   origin {
     domain_name              = aws_s3_bucket.site.bucket_regional_domain_name

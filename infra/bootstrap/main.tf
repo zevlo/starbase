@@ -409,6 +409,12 @@ data "aws_iam_policy_document" "gha_apply_agentcore" {
   }
 
   statement {
+    sid       = "BedrockAgentCoreServiceLinkedRole"
+    actions   = ["iam:CreateServiceLinkedRole"]
+    resources = ["arn:aws:iam::${local.account_id}:role/aws-service-role/bedrock-agentcore.amazonaws.com/*"]
+  }
+
+  statement {
     sid       = "Wafv2List"
     actions   = ["wafv2:ListWebACLs"]
     resources = ["*"]

@@ -57,7 +57,6 @@ resource "aws_wafv2_web_acl" "ask_rate" {
   tags = {}
 }
 
-resource "aws_wafv2_web_acl_association" "cdn" {
-  resource_arn = aws_cloudfront_distribution.cdn.arn
-  web_acl_arn  = aws_wafv2_web_acl.ask_rate.arn
-}
+# Association happens in the distribution config itself (site.tf web_acl_id):
+# for CloudFront, AssociateWebACL rejects distribution ARNs (WAF docs list no
+# CloudFront resource format), but UpdateDistribution accepts the ACL ARN.
